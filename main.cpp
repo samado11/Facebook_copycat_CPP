@@ -2,9 +2,107 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <linked_list.h>
+#include <Node.h>
+#include <Treap.h>
+#include <User.h>
 using namespace std;
 
-vector<string> explode(const string& str, const char& ch)
+    void ROTATE_LEFT(Treap* &root)
+{
+    Treap* R = root->r;
+    Treap* X = root->r->l;
+    R->l = root;
+    root->r= X;
+    root = R;
+}
+void rotRight(Treap* &root)
+{
+    Treap* L = root->l;
+    Treap* Y = root->l->r;
+    L->r = root;
+    root->l= Y;
+    root = L;
+}
+
+bool SEARCH(Treap* root, string key)
+{
+    if (root == nullptr)
+        return false;
+    if (root->data == key)
+        return true;
+    if (key < root->data)
+        return SEARCH(root->l, key);
+    return SEARCH(root->r, key);
+}
+void DELETE(Treap* &root, string key)
+{
+    if (root == nullptr)
+        return;
+    if (key < root->data)
+        DELETE(root->l, key);
+    else if (key > root->data)
+        DELETE(root->r, key);
+    else
+    {
+        if (root->l ==nullptr && root->r == nullptr)
+        {
+            delete root;
+            root = nullptr;
+        }
+        else if (root->l && root->r)
+        {
+            if (root->l->priority < root->r->priority)
+            {
+                ROTATE_LEFT(root);
+                DELETE(root->l, key);
+            }
+            else
+            {
+                rotRight(root);
+                DELETE(root->r, key);
+            }
+        }
+        else
+        {
+            Treap* child = (root->l)? root->l: root->r;
+            Treap* curr = root;
+            root = child;
+            delete curr;
+        }
+    }
+}
+void displayTreap(Treap *root, int space = 0, int height =10)
+{
+    if (root == nullptr)
+        return;
+    space += height;
+    displayTreap(root->l, space);
+    cout << root->data;
+    cout << endl;
+    displayTreap(root->r, space);
+}
+void INSERT(Treap* &root, string d)
+{
+    if (root == nullptr)
+    {
+        root = new Treap(d);
+        return;
+    }
+    if (d.compare(root->data)<0)
+    {
+        INSERT(root->l, d);
+        if (root->l != nullptr && root->l->priority > root->priority)
+            rotRight(root);
+    }
+    else
+    {
+        INSERT(root->r, d);
+        if (root->r!= nullptr && root->r->priority > root->priority)
+            ROTATE_LEFT(root);
+    }
+}
+vector<string> STR_CUT(const string& str, const char& ch)
 {
     string next;
     vector<string> result;
@@ -29,270 +127,137 @@ vector<string> explode(const string& str, const char& ch)
     return result;
 }
 
-
-struct TreapNod    //node declaration
+void printList(Node* node)
 {
-    string data;
-    int priority;
-    TreapNod* l, *r;
-    TreapNod(string d)   //constructor
+    while (node != NULL)
     {
-        this->data = d;
-        this->priority = rand() % 100;
-        this->l= this->r = nullptr;
-    }
-};
-void rotLeft(TreapNod* &root)   //left rotation
-{
-    TreapNod* R = root->r;
-    TreapNod* X = root->r->l;
-    R->l = root;
-    root->r= X;
-    root = R;
-}
-void rotRight(TreapNod* &root)   //right rotation
-{
-    TreapNod* L = root->l;
-    TreapNod* Y = root->l->r;
-    L->r = root;
-    root->l= Y;
-    root = L;
-}
-void insertNod(TreapNod* &root, string d)   //insertion
-{
-    if (root == nullptr)
-    {
-        root = new TreapNod(d);
-        return;
-    }
-    if (d.compare(root->data)<0)
-    {
-        insertNod(root->l, d);
-        if (root->l != nullptr && root->l->priority > root->priority)
-            rotRight(root);
-    }
-    else
-    {
-        insertNod(root->r, d);
-        if (root->r!= nullptr && root->r->priority > root->priority)
-            rotLeft(root);
-    }
-}
-bool searchNod(TreapNod* root, string key)
-{
-    if (root == nullptr)
-        return false;
-    if (root->data == key)
-        return true;
-    if (key < root->data)
-        return searchNod(root->l, key);
-    return searchNod(root->r, key);
-}
-void deleteNod(TreapNod* &root, string key)
-{
-    if (root == nullptr)
-        return;
-    if (key < root->data)
-        deleteNod(root->l, key);
-    else if (key > root->data)
-        deleteNod(root->r, key);
-    else
-    {
-        if (root->l ==nullptr && root->r == nullptr)
-        {
-            delete root;
-            root = nullptr;
-        }
-        else if (root->l && root->r)
-        {
-            if (root->l->priority < root->r->priority)
-            {
-                rotLeft(root);
-                deleteNod(root->l, key);
-            }
-            else
-            {
-                rotRight(root);
-                deleteNod(root->r, key);
-            }
-        }
-        //node to be deleted has only one child
-        else
-        {
-            TreapNod* child = (root->l)? root->l: root->r;
-            TreapNod* curr = root;
-            root = child;
-            delete curr;
-        }
-    }
-}
-void displayTreap(TreapNod *root, int space = 0, int height =10)   //display treap
-{
-    if (root == nullptr)
-        return;
-    space += height;
-    displayTreap(root->l, space);
-    cout << root->data;
-    cout << endl;
-    displayTreap(root->r, space);
-}
-
-class User
-{
-public:
-    string name;
-    string email;
-    string userName;
-    TreapNod  *fbst;
-};
-struct node
-{
-    User data;
-    node *next;
-};
-class linked_list
-{
-public:
-    node *head,*tail;
-public:
-    linked_list()
-    {
-        head = NULL;
-        tail = NULL;
-    }
-
-    void add_node(User n)
-    {
-        node *tmp = new node;
-        tmp->data = n;
-        tmp->next = NULL;
-
-        if(head == NULL)
-        {
-            head = tmp;
-            tail = tmp;
-        }
-        else
-        {
-            tail->next = tmp;
-            tail = tail->next;
-        }
-    }
-
-};
-void printList(node* n)
-{
-    while (n != NULL)
-    {
-        cout <<n->data.name<<"   "<<n->data.userName<<"   "<< n->data.email<< "\n";
-        n = n->next;
+        cout <<node->data.name<<"   "<<node->data.userName<<"   "<< node->data.email<< "\n";
+        node = node->next;
     }
 }
 int main()
 {
-    vector<string> users_vector ;
-    ifstream  usersRelations;
-    usersRelations.open ("all-users-relations.in");
+    vector<string> USERS ;
+    ifstream  MAIN_NETWORK;
+    MAIN_NETWORK.open ("all-users-relations.in");
     string line1;
-    if (usersRelations.is_open())
+    if (MAIN_NETWORK.is_open())
     {
         linked_list a;
-        while ( getline (usersRelations,line1) )
+        while ( getline (MAIN_NETWORK,line1) )
         {
-            users_vector.push_back(line1);
+            USERS.push_back(line1);
             cout << line1 << '\n';
 
 
         }
 
-        usersRelations.close();
+        MAIN_NETWORK.close();
     }
 
     else cout << "Unable to open file";
 
-    usersRelations.close();
+    MAIN_NETWORK.close();
 
-
-
-    ifstream  users;
-    users.open ("all-users.in");
+    ifstream  USERS_INFO;
+    USERS_INFO.open ("all-users.in");
     string line;
     linked_list a;
-    if (users.is_open())
+    if (USERS_INFO.is_open())
     {
 
 
-        while ( getline (users,line) )
+        while ( getline (USERS_INFO,line) )
         {
-            TreapNod* root = nullptr;
+            Treap* root = nullptr;
             //cout << line << '\n';
-            std::vector<std::string> result = explode(line, ',');
-            User* user1 = NULL;
-            user1 = new User();
-            user1->userName = result[0];
-            user1->name = result[1];
-            user1->email = result[2];
-            for (int i = 0; i != users_vector.size(); ++i)
+            std::vector<std::string> result = STR_CUT(line, ',');
+            User* main_user = NULL;
+            main_user = new User();
+            main_user->userName = result[0];
+            main_user->name = result[1];
+            main_user->email = result[2];
+            for (int i = 0; i != USERS.size(); ++i)
             {
-                if (users_vector.at(i).substr(0, users_vector.at(i).find(',')).compare(user1->userName)==0)
+                if (USERS.at(i).substr(0, USERS.at(i).find(',')).compare(main_user->userName)==0)
                 {
-                    insertNod(root, users_vector.at(i).substr(users_vector.at(i).find(',')+2));
+                    INSERT(root, USERS.at(i).substr(USERS.at(i).find(',')+2));
 
                 }
-                else if(users_vector.at(i).substr(users_vector.at(i).find(',')+2).compare(user1->userName)==0)
+                else if(USERS.at(i).substr(USERS.at(i).find(',')+2).compare(main_user->userName)==0)
                 {
-                    insertNod(root, users_vector.at(i).substr(0, users_vector.at(i).find(',')));
+                    INSERT(root, USERS.at(i).substr(0, USERS.at(i).find(',')));
                 }
             }
-            user1->fbst=root;
-            a.add_node(*user1);
+            main_user->fbst=root;
+            a.add_node(*main_user);
 
         }
 
-        printList(a.head);
-        users.close();
+        //printList(a.head);
+        USERS_INFO.close();
     }
 
     else cout << "Unable to open file";
 
-    users.close();
+    USERS_INFO.close();
 
     while(true)
     {
-        string choice;
-        cin>>choice;
-        User user;
-        if (choice.compare("exit") !=0)
+        cout<<" Enter your username"<<endl;
+        string user_input;
+        cin>>user_input;
+        User USER_ONE;
+        bool flag =false;
+        if (user_input.compare("exit") !=0)
         {
-            node* n=a.head;
+            Node* n=a.head;
             while (n != NULL)
             {
-                if (n->data.userName == choice )
+                if (n->data.userName == user_input )
                 {
-                    user=n->data;
-                    cout<<"you are logged in"<<endl;
+                    USER_ONE=n->data;
+                    cout<<"logged in successfully"<<endl;
+                    flag=true;
                     break;
                 }
                 n = n->next;
             }
+            if (flag == false){
+                cout<<"Wrong username"<<endl;
+                continue;
+            }
             while(true)
             {
-                cout<<"1)List all friends"<<endl<<"2)search by username"<<endl<<"3)add friend"<<endl<<"4)remove friend"<<endl<<"5)people you may know"<<endl<<"6)logout"<<endl;
-                string logged_choice;
-                cin>>logged_choice;
-                if(logged_choice.compare("1")==0)
+                cout<<" 1)List all friends"
+                <<endl<<" 2)search by username"
+                <<endl<<" 3)add friend"
+                <<endl<<" 4)remove friend"
+                <<endl<<" 5)people you may know"
+                <<endl<<" 6)logout"<<endl;
+                string user_input_two;
+                cin>>user_input_two;
+                if(user_input_two.compare("1")==0)
                 {
-                    displayTreap(user.fbst);
+                    cout<<endl;
+                    cout<<"--------------- Friends List ---------------------"<<endl<<endl;
+                    displayTreap(USER_ONE.fbst);
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
                     cout<<endl;
                 }
-                if(logged_choice.compare("2")==0)
+                if(user_input_two.compare("2")==0)
                 {
                     string username;
                     cin>>username;
 
-                    if(searchNod(user.fbst,username)==true)
+                    if(SEARCH(USER_ONE.fbst,username)==true)
                     {
-                        node* n=a.head;
+                        Node* n=a.head;
                         while (n != NULL)
                         {
                             if (n->data.userName == username )
@@ -309,31 +274,31 @@ int main()
                     }
                     cout<<endl;
                 }
-                if(logged_choice.compare("3")==0)
+                if(user_input_two.compare("3")==0)
                 {
                     string username;
                     cin>>username;
-                    node* n1=a.head;
-                    User user1;
+                    Node* n1=a.head;
+                    User USER_TWO;
                     while (n1 != NULL)
                     {
                         if (n1->data.userName == username )
                         {
-                            user1=n1->data;
+                            USER_TWO=n1->data;
                             break;
                         }
                         n1 = n1->next;
                     }
 
-                    if(searchNod(user.fbst,username)!=true)
+                    if(SEARCH(USER_ONE.fbst,username)!=true)
                     {
-                        node* n=a.head;
+                        Node* n=a.head;
                         while (n != NULL)
                         {
                             if (n->data.userName == username )
                             {
-                                insertNod(user.fbst, username);
-                                insertNod(user1.fbst, user.userName);
+                                INSERT(USER_ONE.fbst, username);
+                                INSERT(USER_TWO.fbst, USER_ONE.userName);
                                 cout<<"you are now friends"<<endl;
                                 break;
                             }
@@ -346,52 +311,63 @@ int main()
                     }
 
                 }
-                if(logged_choice.compare("4")==0)
+                if(user_input_two.compare("4")==0)
                 {
                     string username;
                     cin>>username;
-                    node* n1=a.head;
-                    User user1;
+                    Node* n1=a.head;
+                    User USER_TWO;
                     while (n1 != NULL)
                     {
                         if (n1->data.userName == username )
                         {
-                            user1=n1->data;
+                            USER_TWO=n1->data;
                             break;
                         }
                         n1 = n1->next;
                     }
-                    node* n=a.head;
+                    Node* n=a.head;
                     while (n != NULL)
                     {
                         if (n->data.userName == username )
                         {
-                            deleteNod(user.fbst, username);
-                            deleteNod(user1.fbst, user.userName);
+                            DELETE(USER_ONE.fbst, username);
+                            DELETE(USER_TWO.fbst, USER_ONE.userName);
                             cout<<"Done"<<endl;
                             break;
                         }
                         n = n->next;
                     }
                 }
-                if(logged_choice.compare("5")==0)
+                if(user_input_two.compare("5")==0)
                 {
-                    node* n=a.head;
+                    Node* n=a.head;
                     int count=0;
+                    cout<<endl;
+                    cout<<"--------------- People you may know ---------------------"<<endl<<endl;
                     while (n != NULL)
                     {
-                        if(searchNod(user.fbst,n->data.userName)!=true && n->data.userName.compare(user.userName) !=0 && count <5){
+                        if(SEARCH(USER_ONE.fbst,n->data.userName)!=true && n->data.userName.compare(USER_ONE.userName) !=0 && count <5)
+                        {
                             cout<<n->data.userName<<endl;
-                             count++;
+
+                            count++;
                         }
                         n = n->next;
                     }
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<endl;
                 }
-                if(logged_choice.compare("6")==0)
+                if(user_input_two.compare("6")==0)
                 {
                     break;
                 }
-                if(logged_choice.compare("exit")==0)
+                if(user_input_two.compare("exit")==0)
                     return false;
 
             }
@@ -402,10 +378,6 @@ int main()
         }
 
     }
-
-    /*BST b, *root = NULL;
-    root = b.Insert(root, *user1);
-    b.Inorder(root);*/
 
     return 0;
 }
