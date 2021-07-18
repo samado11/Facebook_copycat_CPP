@@ -1,0 +1,13 @@
+# depslib dependency file v1.0
+1626559795 source:c:\users\www\desktop\dspro\main.cpp
+	<iostream>
+	<fstream>
+	<string>
+	<vector>
+
+1626624987 source:c:\users\maroa\downloads\dspro\dspro\main.cpp
+	<iostream>
+	<fstream>
+	<string>
+	<vector>
+
